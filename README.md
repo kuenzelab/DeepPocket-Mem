@@ -45,7 +45,7 @@ Datasets used for training and testing, model, .types, and .molcache2 files can 
 
 Example usage of predict.py:
 
-    python predict.py -p protein.pdb -c class_best_test_auc_54001.pth.tar -s seg_best_test_IOU_93.pth.tar -r 3
+    python predict.py -p protein.pdb -c class_best_test_auc_73001.pth.tar -s seg_best_test_IOU_93.pth.tar -r 3
 
 
 ## Training classifier

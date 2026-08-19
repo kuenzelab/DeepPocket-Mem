@@ -81,26 +81,23 @@ class Unet(nn.Module):
         self.load_state_dict(state_dict, strict=False)  
 
     def freeze_except_decoder(self):
-        encoder_blocks = [self.in1, self.down1, self.down2, self.down3, self.down4]
-        decoder_blocks = [self.up1, self.up2, self.up3, self.up4, self.conv]
+        """
+        Freeze all encoder layers and only train decoder layers.
+        """
+        freeze_modules = [self.in1, self.down1, self.down2, self.down3, self.down4]
+        train_modules = [self.up1, self.up2, self.up3, self.up4, self.conv]
 
-        for block in encoder_blocks[:2]:  # in1, down1
-            for param in block.parameters():
+        for module in freeze_modules:
+            for param in module.parameters():
                 param.requires_grad = False
-            block.eval()  
+            module.eval()  
 
-        
-        for block in encoder_blocks[2:]:  # down2, down3, down4
-            for param in block.parameters():
+        for module in train_modules:
+            for param in module.parameters():
                 param.requires_grad = True
-            block.train()
+            module.train()
 
-        for block in decoder_blocks:
-            for param in block.parameters():
-                param.requires_grad = True
-            block.train()
-
-        # print trainable parameter count
+        #  print trainable parameter count
         num_trainable = sum(p.numel() for p in self.parameters() if p.requires_grad)
         print(f"Trainable parameters: {num_trainable}")
 

@@ -37,15 +37,24 @@ class Model(nn.Module):
 
         # extra 2-layer MLP
         self.mlp_head = nn.Sequential(
-            nn.Flatten(),               
-            nn.Linear(16000, 512),
+            nn.Flatten(),
+            nn.Linear(16000, 1024),
             nn.ReLU(inplace=True),
-            nn.Dropout(0.2),
-            nn.Linear(512, 2)
+            nn.Dropout(0.0),
+
+            nn.Linear(1024, 512),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.0),
+
+            nn.Linear(512, 128),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.0)
         )
 
+        # extra classifier layer
+        self.classifier = nn.Linear(128, 2)
+        
         self.freeze_all_except_unitx()
-
 
     def forward(self, x):
         out = self.unit0_conv(x)
@@ -69,28 +78,30 @@ class Model(nn.Module):
         out = self.unit5_conv(out)
         out = self.unit5_func(out)
 
-        out = out.reshape(out.size(0), -1)
+        #out = out.reshape(out.size(0), -1)
         #out = self.final_fc(out)
         
-        out = self.mlp_head(out)
+        out = self.mlp_head(out) 
+        out = self.classifier(out) 
 
         return out
 
 
     def freeze_all_except_unitx(self):
         """
-        freezes all layers except unit5_conv, mlp_head
+        Freezes all layers except mlp_head, classifier
         """
         for name, param in self.named_parameters():
-            if any(x in name for x in ['unit5_conv', 'mlp_head']):
+            if any(x in name for x in [ 'mlp_head', 'classifier']):
                 param.requires_grad = True
             else:
                 param.requires_grad = False
 
 
+
     def load_pretrained_weights(self, path):
         """
-        loads weights from a pre-trained model
+        Loads weights from a pre-trained model
         """
         state_dict = torch.load(path, map_location='cpu')
         self.load_state_dict(state_dict, strict=False)
